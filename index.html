@@ -19,16 +19,13 @@ content="OPD LIVE - Live OPD queue and hospital information."
 «»
 
   <title>OPD LIVE</title>  <!-- MAIN STYLES -->  <link rel="stylesheet" href="style.css">
-</head><body>  <div id="app"><!-- =====================================================
+</head><body>  <div id="app"><!-- =========================
      PATIENT APP
-     ===================================================== -->
+     ========================= -->
 
 <div class="app-container">
 
-  <!-- =========================
-       HEADER
-       ========================= -->
-
+  <!-- HEADER -->
   <header class="app-header">
 
     <div class="header-row">
@@ -73,33 +70,20 @@ content="OPD LIVE - Live OPD queue and hospital information."
   </header>
 
 
-  <!-- =========================
-       MAIN CONTENT
-       ========================= -->
-
+  <!-- MAIN CONTENT -->
   <main id="mainContent">
 
-    <!-- =========================
-         WELCOME
-         ========================= -->
-
+    <!-- WELCOME -->
     <section class="page-section welcome">
 
-      <h2>
-        Find and track your OPD
-      </h2>
+      <h2>Find and track your OPD</h2>
 
-      <p>
-        Healthcare made simple.
-      </p>
+      <p>Healthcare made simple.</p>
 
       <!-- SEARCH -->
-
       <div class="search-box">
 
-        <span class="search-icon">
-          🔍
-        </span>
+        <span class="search-icon">🔍</span>
 
         <input
           id="searchInput"
@@ -120,108 +104,63 @@ content="OPD LIVE - Live OPD queue and hospital information."
     <section class="page-section">
 
       <div class="section-title">
-
-        <h3>
-          Explore
-        </h3>
-
+        <h3>Explore</h3>
       </div>
-
 
       <div class="explore-grid">
 
         <!-- HOSPITAL -->
-
         <button
           class="explore-item"
           id="hospitalOption"
           type="button"
         >
-
-          <div class="explore-icon">
-            🏥
-          </div>
-
-          <span>
-            Hospital
-          </span>
-
+          <div class="explore-icon">🏥</div>
+          <span>Hospital</span>
         </button>
 
 
         <!-- SPECIALISATION -->
-
         <button
           class="explore-item"
           id="specialisationOption"
           type="button"
         >
-
-          <div class="explore-icon">
-            🩺
-          </div>
-
-          <span>
-            Specialisation
-          </span>
-
+          <div class="explore-icon">🩺</div>
+          <span>Specialisation</span>
         </button>
 
 
         <!-- DOCTOR -->
-
         <button
           class="explore-item"
           id="doctorOption"
           type="button"
         >
-
-          <div class="explore-icon">
-            👨‍⚕️
-          </div>
-
-          <span>
-            Doctor
-          </span>
-
+          <div class="explore-icon">👨‍⚕️</div>
+          <span>Doctor</span>
         </button>
 
 
         <!-- EMERGENCY -->
-
         <button
           class="explore-item"
           id="emergencyOption"
           type="button"
         >
-
-          <div class="explore-icon">
-            🚨
-          </div>
-
-          <span>
-            Emergency
-          </span>
-
+          <div class="explore-icon">🚨</div>
+          <span>Emergency</span>
         </button>
 
 
         <!-- MY OPD -->
-
         <button
           class="explore-item my-opd"
           id="myOpdOption"
           type="button"
         >
-
-          <div class="explore-icon">
-            🎫
-          </div>
-
-          <span>
-            My OPD
-          </span>
-
+          <div class="explore-icon">🎫</div>
+          <span>My OPD</span>
         </button>
 
       </div>
@@ -241,11 +180,8 @@ content="OPD LIVE - Live OPD queue and hospital information."
       <div class="section-title live-header">
 
         <div class="live-label">
-
           <span class="live-dot"></span>
-
           LIVE OPD
-
         </div>
 
         <button
@@ -258,8 +194,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
       </div>
 
 
-      <!-- DOCTORS WILL BE RENDERED BY app.js -->
-
+      <!-- DOCTORS RENDER HERE -->
       <div
         class="doctor-list"
         id="doctorList"
@@ -269,9 +204,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
 
           <div class="spinner"></div>
 
-          <span>
-            Loading live OPD...
-          </span>
+          <span>Loading live OPD...</span>
 
         </div>
 
@@ -290,16 +223,11 @@ content="OPD LIVE - Live OPD queue and hospital information."
     >
 
       <div class="section-title">
-
-        <h3>
-          My OPD
-        </h3>
-
+        <h3>My OPD</h3>
       </div>
 
 
       <!-- LOGGED-IN OPD CARD -->
-
       <div
         class="my-opd-card"
         id="myOpdCard"
@@ -334,19 +262,14 @@ content="OPD LIVE - Live OPD queue and hospital information."
 
 
       <!-- LOGIN REQUIRED -->
-
       <div
         class="login-required hidden"
         id="loginRequired"
       >
 
-        <div class="icon">
-          🔐
-        </div>
+        <div class="icon">🔐</div>
 
-        <h4>
-          Login required
-        </h4>
+        <h4>Login required</h4>
 
         <p>
           Login with your patient ID to view and track your OPD number.
@@ -375,13 +298,8 @@ content="OPD LIVE - Live OPD queue and hospital information."
     >
 
       <div class="section-title">
-
-        <h3>
-          Hospitals
-        </h3>
-
+        <h3>Hospitals</h3>
       </div>
-
 
       <div id="hospitalList">
 
@@ -395,9 +313,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
 
             <div>
 
-              <h4>
-                OPB Hospital
-              </h4>
+              <h4>OPB Hospital</h4>
 
               <div class="hospital-address">
                 Healthcare Centre
@@ -415,7 +331,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
 
 
     <!-- =========================
-         INFORMATION
+         OPD INFORMATION
          ========================= -->
 
     <section
@@ -424,21 +340,14 @@ content="OPD LIVE - Live OPD queue and hospital information."
     >
 
       <div class="section-title">
-
-        <h3>
-          OPD Information
-        </h3>
-
+        <h3>OPD Information</h3>
       </div>
-
 
       <div class="info-card">
 
         <div class="info-row">
 
-          <span>
-            Live OPD
-          </span>
+          <span>Live OPD</span>
 
           <span class="text-primary">
             Active
@@ -446,12 +355,9 @@ content="OPD LIVE - Live OPD queue and hospital information."
 
         </div>
 
-
         <div class="info-row">
 
-          <span>
-            Doctors
-          </span>
+          <span>Doctors</span>
 
           <span id="doctorCount">
             0
@@ -459,12 +365,9 @@ content="OPD LIVE - Live OPD queue and hospital information."
 
         </div>
 
-
         <div class="info-row">
 
-          <span>
-            Service
-          </span>
+          <span>Service</span>
 
           <span>
             Live Queue Tracking
@@ -487,13 +390,8 @@ content="OPD LIVE - Live OPD queue and hospital information."
     >
 
       <div class="section-title">
-
-        <h3>
-          Emergency
-        </h3>
-
+        <h3>Emergency</h3>
       </div>
-
 
       <div class="emergency-card">
 
@@ -534,15 +432,8 @@ content="OPD LIVE - Live OPD queue and hospital information."
       id="navHome"
       type="button"
     >
-
-      <span class="nav-icon">
-        🏠
-      </span>
-
-      <span>
-        Home
-      </span>
-
+      <span class="nav-icon">🏠</span>
+      <span>Home</span>
     </button>
 
 
@@ -551,15 +442,8 @@ content="OPD LIVE - Live OPD queue and hospital information."
       id="navLive"
       type="button"
     >
-
-      <span class="nav-icon">
-        🔴
-      </span>
-
-      <span>
-        Live
-      </span>
-
+      <span class="nav-icon">🔴</span>
+      <span>Live</span>
     </button>
 
 
@@ -568,15 +452,8 @@ content="OPD LIVE - Live OPD queue and hospital information."
       id="navMyOpd"
       type="button"
     >
-
-      <span class="nav-icon">
-        🎫
-      </span>
-
-      <span>
-        My OPD
-      </span>
-
+      <span class="nav-icon">🎫</span>
+      <span>My OPD</span>
     </button>
 
 
@@ -585,15 +462,8 @@ content="OPD LIVE - Live OPD queue and hospital information."
       id="navProfile"
       type="button"
     >
-
-      <span class="nav-icon">
-        👤
-      </span>
-
-      <span>
-        Profile
-      </span>
-
+      <span class="nav-icon">👤</span>
+      <span>Profile</span>
     </button>
 
   </nav>
@@ -601,9 +471,9 @@ content="OPD LIVE - Live OPD queue and hospital information."
 </div>
 
 
-<!-- =====================================================
+<!-- =========================
      LOGIN MODAL
-     ===================================================== -->
+     ========================= -->
 
 <div
   class="modal-overlay hidden"
@@ -614,9 +484,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
 
     <div class="modal-header">
 
-      <h3>
-        Patient Login
-      </h3>
+      <h3>Patient Login</h3>
 
       <button
         class="close-button"
@@ -789,9 +657,9 @@ content="OPD LIVE - Live OPD queue and hospital information."
 </div>
 
 
-<!-- =====================================================
+<!-- =========================
      GENERIC MODAL
-     ===================================================== -->
+     ========================= -->
 
 <div
   class="modal-overlay hidden"
@@ -824,16 +692,14 @@ content="OPD LIVE - Live OPD queue and hospital information."
 </div>
 
 
-<!-- =====================================================
+<!-- =========================
      TOAST
-     ===================================================== -->
+     ========================= -->
 
 <div
   class="toast-container"
   id="toastContainer"
 ></div>
 
-  </div>  <!-- =====================================================
-       MAIN APPLICATION LOGIC
-       ===================================================== -->  <script src="app.js"></script></body>
-</html>
+  </div>  <!-- MAIN APPLICATION LOGIC -->  <script src="app.js"></script></body>
+  </html>
