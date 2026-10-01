@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#0b8f6a">
+<meta name="description" content="OPD LIVE - Live OPD queue and hospital information">
+<title>OPD LIVE</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --green:#0b8f6a;
+  --dark:#067052;
+  --light:#e9f8f3;
+  --bg:#f7faf9;
+  --white:#fff;
+  --text:#17352d;
+  --muted:#71827d;
+  --red:#e53935;
+  --orange:#f59e0b;
+  --border:#e3ece9;
+  --shadow:0 8px 25px rgba(20,70,55,.08);
+}
+
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:#eaf0ee;
+  color:var(--text);
+}
+
+button,input,select{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+  border:0;
+}
+
+.app{
+  max-width:520px;
+  min-height:100vh;
+  margin:auto;
+  background:var(--bg);
+  position:relative;
+  padding-bottom:82px;
+}
+
+header{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:rgba(255,255,255,.97);
+  border-bottom:1px solid var(--border);
+  padding:15px 18px;
+}
+
+.header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.brand{
+  font-size:22px;
+  font-weight:800;
+  color:var(--green);
+}
+
+.subtitle{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:3px;
+}
+
+.header-actions{
+  display:flex;
+  gap:8px;
+}
+
+.icon-btn{
+  width:40px;
+  height:40px;
+  border-radius:13px;
+  background:var(--light);
+  color:var(--green);
+  font-size:18px;
+}
+
+.page{
+  padding:18px;
+}
+
+.hero{
+  background:linear-gradient(135deg,#0b8f6a,#067052);
+  color:white;
+  border-radius:23px;
+  padding:22px;
+  margin-bottom:18px;
+  box-shadow:var(--shadow);
+}
+
+.hero small{
+  opacity:.85;
+}
+
+.hero h1{
+  margin:7px 0;
+  font-size:26px;
+}
+
+.hero p{
+  opacity:.88;
+  font-size:14px;
+}
+
+.search{
+  margin-top:17px;
+  background:white;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  padding:0 13px;
+}
+
+.search span{
+  color:#7c8c87;
+}
+
+.search input{
+  border:0;
+  outline:0;
+  padding:14px 10px;
+  width:100%;
+  background:transparent;
+}
+
+.section-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:20px 0 11px;
+}
+
+.section-title h2{
+  font-size:17px;
+}
+
+.section-title button{
+  background:none;
+  color:var(--green);
+  font-size:12px;
+  font-weight:700;
+}
+
+.options{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+}
+
+.option{
+  background:white;
+  border:1px solid var(--border);
+  border-radius:15px;
+  min-height:88px;
+  padding:10px 5px;
+  text-align:center;
+  box-shadow:0 3px 12px rgba(0,0,0,.03);
+}
+
+.option.active{
+  background:var(--light);
+  border-color:#bde8da;
+}
+
+.option .emoji{
+  display:block;
+  font-size:23px;
+  margin-bottom:7px;
+}
+
+.option span:last-child{
+  font-size:10px;
+  font-weight:700;
+}
+
+.live-title{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+
+.live-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--red);
+  box-shadow:0 0 0 5px #ffe6e5;
+}
+
+.live-label{
+  color:var(--red);
+  font-size:11px;
+  font-weight:800;
+}
+
+.card{
+  background:white;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:15px;
+  margin-bottom:12px;
+  box-shadow:var(--shadow);
+}
+
+.doctor-top{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.doctor-info{
+  display:flex;
+  gap:11px;
+}
+
+.avatar{
+  width:47px;
+  height:47px;
+  border-radius:15px;
+  background:var(--light);
+  color:var(--green);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+  font-weight:800;
+}
+
+.doctor-name{
+  font-weight:800;
+  font-size:15px;
+}
+
+.speciality{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:3px;
+}
+
+.hospital{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+.status{
+  height:max-content;
+  padding:5px 8px;
+  border-radius:20px;
+  font-size:10px;
+  font-weight:800;
+}
+
+.available{
+  color:#087a5a;
+  background:#e4f8f0;
+}
+
+.unavailable{
+  color:#a33;
+  background:#ffe8e8;
+}
+
+.queue{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:#f7faf9;
+  border-radius:13px;
+  padding:12px;
+  margin-top:13px;
+}
+
+.queue small{
+  color:var(--muted);
+  display:block;
+  font-size:10px;
+}
+
+.queue strong{
+  font-size:21px;
+  color:var(--green);
+}
+
+.btn{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  font-weight:800;
+  margin-top:10px;
+}
+
+.primary{
+  background:var(--green);
+  color:white;
+}
+
+.secondary{
+  background:var(--light);
+  color:var(--green);
+}
+
+.danger{
+  background:#ffe8e8;
+  color:#b52c2c;
+}
+
+.my-opd{
+  background:linear-gradient(135deg,#0b8f6a,#067052);
+  color:white;
+  border-radius:20px;
+  padding:18px;
+  margin-top:14px;
+}
+
+.my-opd .big{
+  font-size:42px;
+  font-weight:900;
+  margin:8px 0;
+}
+
+.my-opd small{
+  opacity:.8;
+}
+
+.login-card{
+  background:white;
+  border:2px dashed #b7ddd2;
+  border-radius:18px;
+  padding:20px;
+  text-align:center;
+}
+
+.login-card h3{
+  margin-bottom:7px;
+}
+
+.login-card p{
+  color:var(--muted);
+  font-size:13px;
+}
+
+.bottom-nav{
+  position:fixed;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(520px,100%);
+  background:white;
+  border-top:1px solid var(--border);
+  display:flex;
+  justify-content:space-around;
+  padding:10px 5px calc(10px + env(safe-area-inset-bottom));
+  z-index:30;
+}
+
+.nav-btn{
+  background:none;
+  color:#80908b;
+  font-size:10px;
+  font-weight:700;
+}
+
+.nav-btn.active{
+  color:var(--green);
+}
+
+.nav-btn div{
+  font-size:21px;
+  margin-bottom:3px;
+}
+
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.48);
+  z-index:100;
+  align-items:flex-end;
+  justify-content:center;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.modal-box{
+  width:min(520px,100%);
+  background:white;
+  border-radius:24px 24px 0 0;
+  padding:22px;
+  max-height:90vh;
+  overflow:auto;
+}
+
+.modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:18px;
+}
+
+.close{
+  background:#f0f3f2;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+}
+
+.tabs{
+  display:flex;
+  background:#f1f5f3;
+  border-radius:12px;
+  padding:4px;
+  margin-bottom:15px;
+}
+
+.tab{
+  flex:1;
+  padding:10px;
+  background:transparent;
+  border-radius:9px;
+}
+
+.tab.active{
+  background:white;
+  color:var(--green);
+  font-weight:800;
+}
+
+.field{
+  margin-bottom:12px;
+}
+
+.field label{
+  display:block;
+  font-size:12px;
+  font-weight:700;
+  margin-bottom:6px;
+}
+
+.field input,
+.field select{
+  width:100%;
+  padding:13px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  outline:none;
+  background:white;
+}
+
+.dashboard-head{
+  background:linear-gradient(135deg,#0b8f6a,#067052);
+  color:white;
+  padding:22px;
+  border-radius:20px;
+  margin-bottom:15px;
+}
+
+.role-badge{
+  display:inline-block;
+  background:rgba(255,255,255,.18);
+  padding:6px 10px;
+  border-radius:20px;
+  font-size:10px;
+  margin-bottom:9px;
+}
+
+.dashboard-head h2{
+  font-size:23px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+}
+
+.stat{
+  background:white;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:15px;
+}
+
+.stat small{
+  color:var(--muted);
+}
+
+.stat strong{
+  display:block;
+  font-size:25px;
+  margin-top:5px;
+  color:var(--green);
+}
+
+.menu-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin-top:14px;
+}
+
+.menu-item{
+  background:white;
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:17px;
+  font-weight:800;
+  text-align:left;
+}
+
+.menu-item span{
+  display:block;
+  font-size:22px;
+  margin-bottom:8px;
+}
+
+.hidden{
+  display:none!important;
+}
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:90px;
+  transform:translateX(-50%);
+  background:#17352d;
+  color:white;
+  padding:12px 17px;
+  border-radius:12px;
+  font-size:12px;
+  z-index:200;
+  display:none;
+  width:max-content;
+  max-width:90%;
+}
+
+.toast.show{
+  display:block;
+}
+
+.empty{
+  text-align:center;
+  padding:30px 15px;
+  color:var(--muted);
+}
+
+@media(max-width:380px){
+  .options{
+    gap:5px;
+  }
+  .option span:last-child{
+    font-size:9px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+  <div class="header-row">
+    <div>
+      <div class="brand">OPD LIVE</div>
+      <div class="subtitle">Live OPD • Hospitals • Doctors</div>
+    </div>
+
+    <div class="header-actions">
+      <button class="icon-btn" onclick="showNotifications()">🔔</button>
+      <button class="icon-btn" onclick="openLogin()">👤</button>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+
+<!-- PATIENT HOME -->
+
+<section id="patientHome">
+
+  <div class="hero">
+    <small>Healthcare made simple</small>
+    <h1>Find and track your OPD</h1>
+    <p>See live OPD information and manage your queue.</p>
+
+    <div class="search">
+      <span>🔎</span>
+      <input id="searchInput"
+        placeholder="Search hospital, doctor or speciality"
+        oninput="searchDoctors()">
+    </div>
+  </div>
+
+  <div class="section-title">
+    <h2>Explore</h2>
+  </div>
+
+  <div class="options">
+
+    <button class="option" onclick="filterType('hospital')">
+      <span class="emoji">🏥</span>
+      <span>Hospital</span>
+    </button>
+
+    <button class="option" onclick="filterType('speciality')">
+      <span class="emoji">🩺</span>
+      <span>Specialisation</span>
+    </button>
+
+    <button class="option" onclick="filterType('doctor')">
+      <span class="emoji">👨‍⚕️</span>
+      <span>Doctor</span>
+    </button>
+
+    <button class="option" onclick="showEmergency()">
+      <span class="emoji">🚨</span>
+      <span>Emergency</span>
+    </button>
+
+    <button class="option active" onclick="openMyOPD()">
+      <span class="emoji">🎫</span>
+      <span>My OPD</span>
+    </button>
+
+  </div>
+
+  <div id="myOpdArea"></div>
+
+  <div class="section-title">
+    <div class="live-title">
+      <span class="live-dot"></span>
+      <h2>Live OPD</h2>
+    </div>
+    <button onclick="renderDoctors()">View all</button>
+  </div>
+
+  <div id="doctorList"></div>
+
+</section>
+
+
+<!-- ROLE DASHBOARD -->
+
+<section id="dashboard" class="hidden">
+
+  <div id="dashboardContent"></div>
+
+</section>
+
+</main>
+
+
+<nav class="bottom-nav">
+
+  <button class="nav-btn active" onclick="goHome()">
+    <div>⌂</div>
+    Home
+  </button>
+
+  <button class="nav-btn" onclick="showDoctorsPage()">
+    <div>🩺</div>
+    Doctors
+  </button>
+
+  <button class="nav-btn" onclick="openMyOPD()">
+    <div>🎫</div>
+    My OPD
+  </button>
+
+  <button class="nav-btn" onclick="showNotifications()">
+    <div>🔔</div>
+    Alerts
+  </button>
+
+  <button class="nav-btn" onclick="openLogin()">
+    <div>👤</div>
+    Account
+  </button>
+
+</nav>
+
+</div>
+
+
+<!-- LOGIN MODAL -->
+
+<div class="modal" id="loginModal">
+
+  <div class="modal-box">
+
+    <div class="modal-head">
+      <div>
+        <h2>OPD LIVE Account</h2>
+        <small>Login or create your account</small>
+      </div>
+
+      <button class="close" onclick="closeModal('loginModal')">✕</button>
+    </div>
+
+    <div class="tabs">
+
+      <button class="tab active"
+        id="loginTab"
+        onclick="switchAuth('login')">
+        Login
+      </button>
+
+      <button class="tab"
+        id="registerTab"
+        onclick="switchAuth('register')">
+        Register
+      </button>
+
+    </div>
+
+    <div class="field">
+      <label>Account type</label>
+
+      <select id="accountRole">
+        <option value="patient">Patient</option>
+        <option value="doctor">Doctor</option>
+        <option value="receptionist">Receptionist</option>
+        <option value="admin">Admin</option>
+      </select>
+
+    </div>
+
+    <div class="field">
+      <label>Name</label>
+      <input id="authName" placeholder="Enter name">
+    </div>
+
+    <div class="field">
+      <label>Mobile / Email</label>
+      <input id="authContact" placeholder="Mobile number or email">
+    </div>
+
+    <div class="field">
+      <label>Password</label>
+      <input id="authPassword" type="password" placeholder="Password">
+    </div>
+
+    <div id="registerFields" class="hidden">
+
+      <div class="field">
+        <label>Age</label>
+        <input id="authAge" type="number" placeholder="Age">
+      </div>
+
+      <div class="field">
+        <label>OTP</label>
+        <input id="authOtp" placeholder="Demo OTP: 123456">
+      </div>
+
+    </div>
+
+    <button class="btn primary" onclick="submitAuth()">
+      Continue
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- DOCTOR PROFILE MODAL -->
+
+<div class="modal" id="doctorModal">
+
+  <div class="modal-box">
+
+    <div class="modal-head">
+
+      <h2 id="doctorModalName">Doctor</h2>
+
+      <button class="close"
+        onclick="closeModal('doctorModal')">✕</button>
+
+    </div>
+
+    <div id="doctorModalBody"></div>
+
+  </div>
+
+</div>
+
+
+<!-- GENERAL MESSAGE MODAL -->
+
+<div class="modal" id="messageModal">
+
+  <div class="modal-box">
+
+    <div class="modal-head">
+
+      <h2 id="messageTitle">Information</h2>
+
+      <button class="close"
+        onclick="closeModal('messageModal')">✕</button>
+
+    </div>
+
+    <div id="messageBody"></div>
+
+  </div>
+
+</div>
+
+
+<div class="toast" id="toast"></div>
+
+
+<script>
+
+/* =====================================================
+   OPD LIVE - APPLICATION CORE
+   Frontend foundation
+   ===================================================== */
+
+
+/* -------------------------------
+   SHARED APPLICATION DATA
+-------------------------------- */
+
+const defaultData = {
+
+  users: [],
+
+  doctors: [
+
+    {
+      id:"DOC001",
+      name:"Dr. Sharma",
+      speciality:["General Physician"],
+      hospital:"OPD LIVE Hospital",
+      phone:"0000000000",
+      address:"Main City",
+      currentOPD:17,
+      available:true,
+      timing:"09:00 AM - 01:00 PM",
+      days:"Monday - Saturday",
+      lastUpdated:new Date().toISOString()
+    },
+
+    {
+      id:"DOC002",
+      name:"Dr. Priya",
+      speciality:["Gynecologist"],
+      hospital:"City Care Hospital",
+      phone:"0000000000",
+      address:"City Center",
+      currentOPD:8,
+      available:true,
+      timing:"10:00 AM - 02:00 PM",
+      days:"Monday - Friday",
+      lastUpdated:new Date().toISOString()
+    },
+
+    {
+      id:"DOC003",
+      name:"Dr. Verma",
+      speciality:["Cardiologist"],
+      hospital:"Metro Hospital",
+      phone:"0000000000",
+      address:"Medical Road",
+      currentOPD:4,
+      available:false,
+      timing:"11:00 AM - 03:00 PM",
+      days:"Monday - Saturday",
+      lastUpdated:new Date().toISOString()
+    }
+
+  ],
+
+  hospitals:[
+
+    {
+      id:"H001",
+      name:"OPD LIVE Hospital",
+      address:"Main City",
+      phone:"0000000000",
+      emergency:true,
+      ambulance:false
+    },
+
+    {
+      id:"H002",
+      name:"City Care Hospital",
+      address:"City Center",
+      phone:"0000000000",
+      emergency:true,
+      ambulance:true
+    }
+
+  ],
+
+  notifications:[],
+
+  settings:{
+    maxActiveOPD:4,
+    startingOPD:1
+  }
+
+};
+
+
+/* -------------------------------
+   LOCAL STORAGE
+-------------------------------- */
+
+function loadData(){
+
+  const saved = localStorage.getItem("opdLiveData");
+
+  if(saved){
+
+    try{
+      return JSON.parse(saved);
+    }catch(error){
+      console.log(error);
+    }
+
+  }
+
+  localStorage.setItem(
+    "opdLiveData",
+    JSON.stringify(defaultData)
+  );
+
+  return JSON.parse(JSON.stringify(defaultData));
+}
+
+let appData = loadData();
+
+
+function saveData(){
+
+  localStorage.setItem(
+    "opdLiveData",
+    JSON.stringify(appData)
+  );
+
+}
+
+
+/* -------------------------------
+   CURRENT USER
+-------------------------------- */
+
+let currentUser =
+  JSON.parse(localStorage.getItem("opdLiveUser") || "null");
+
+
+function saveCurrentUser(){
+
+  if(currentUser){
+
+    localStorage.setItem(
+      "opdLiveUser",
+      JSON.stringify(currentUser)
+    );
+
+  }else{
+
+    localStorage.removeItem("opdLiveUser");
+
+  }
+
+}
+
+
+/* -------------------------------
+   HOME
+-------------------------------- */
+
+function goHome(){
+
+  document.getElementById("patientHome")
+    .classList.remove("hidden");
+
+  document.getElementById("dashboard")
+    .classList.add("hidden");
+
+  renderDoctors();
+
+}
+
+
+function renderDoctors(){
+
+  const container =
+    document.getElementById("doctorList");
+
+  const doctors = appData.doctors;
+
+  if(!doctors.length){
+
+    container.innerHTML =
+      `<div class="empty">No doctors available.</div>`;
+
+    return;
+
+  }
+
+  container.innerHTML =
+    doctors.map(doctor => doctorCard(doctor)).join("");
+
+}
+
+
+function doctorCard(doctor){
+
+  const initial =
+    doctor.name.replace("Dr.","").trim().charAt(0);
+
+  const status =
+    doctor.available
+      ? `<span class="status available">AVAILABLE</span>`
+      : `<span class="status unavailable">NOT AVAILABLE</span>`;
+
+  return `
+
+    <div class="card">
+
+      <div class="doctor-top">
+
+        <div class="doctor-info">
+
+          <div class="avatar">${initial}</div>
+
+          <div>
+
+            <div class="doctor-name">
+              ${doctor.name}
+            </div>
+
+            <div class="speciality">
+              ${doctor.speciality.join(", ")}
+            </div>
+
+            <div class="hospital">
+              🏥 ${doctor.hospital}
+            </div>
+
+          </div>
+
+        </div>
+
+        ${status}
+
+      </div>
+
+      <div class="queue">
+
+        <div>
+          <small>Current OPD</small>
+          <strong>${doctor.currentOPD}</strong>
+        </div>
+
+        <div style="text-align:right">
+          <small>Last updated</small>
+          <span style="font-size:11px">
+            Just now
+          </span>
+        </div>
+
+      </div>
+
+      <button class="btn secondary"
+        onclick="openDoctor('${doctor.id}')">
+        View Doctor
+      </button>
+
+    </div>
+
+  `;
+
+}
+
+
+/* -------------------------------
+   SEARCH
+-------------------------------- */
+
+function searchDoctors(){
+
+  const value =
+    document.getElementById("searchInput")
+      .value.toLowerCase()
+      .trim();
+
+  const doctors =
+    appData.doctors.filter(d => {
+
+      return (
+
+        d.name.toLowerCase().includes(value) ||
+
+        d.hospital.toLowerCase().includes(value) ||
+
+        d.speciality.join(" ")
+          .toLowerCase()
+          .includes(value)
+
+      );
+
+    });
+
+  document.getElementById("doctorList").innerHTML =
+    doctors.length
+      ? doctors.map(d => doctorCard(d)).join("")
+      : `<div class="empty">
+           No matching doctor found.
+         </div>`;
+
+}
+
+
+/* -------------------------------
+   DOCTOR PROFILE
+-------------------------------- */
+
+function openDoctor(id){
+
+  const doctor =
+    appData.doctors.find(d => d.id === id);
+
+  if(!doctor) return;
+
+  document.getElementById("doctorModalName")
+    .textContent = doctor.name;
+
+  document.getElementById("doctorModalBody")
+    .innerHTML = `
+
+      <div class="card">
+
+        <div class="doctor-info">
+
+          <div class="avatar">
+            ${doctor.name.charAt(3) || "D"}
+          </div>
+
+          <div>
+
+            <b>${doctor.name}</b>
+
+            <div class="speciality">
+              ${doctor.speciality.join(", ")}
+            </div>
+
+          </div>
+
+        </div>
+
+        <hr style="border:0;border-top:1px solid #eee;margin:15px 0">
+
+        <p>🏥 ${doctor.hospital}</p>
+
+        <p style="margin-top:8px">
+          📍 ${doctor.address}
+        </p>
+
+        <p style="margin-top:8px">
+          📞 ${doctor.phone}
+        </p>
+
+        <p style="margin-top:8px">
+          🕐 ${doctor.timing}
+        </p>
+
+        <p style="margin-top:8px">
+          📅 ${doctor.days}
+        </p>
+
+        <div class="queue">
+
+          <div>
+            <small>Current OPD</small>
+            <strong>${doctor.currentOPD}</strong>
+          </div>
+
+          <div>
+            ${doctor.available
+              ? '<span class="status available">LIVE</span>'
+              : '<span class="status unavailable">OFFLINE</span>'}
+          </div>
+
+        </div>
+
+        <button class="btn primary"
+          onclick="joinOPD('${doctor.id}')">
+
+          ${currentUser
+            ? "Join OPD"
+            : "Login to Join OPD"}
+
+        </button>
+
+      </div>
+
+    `;
+
+  openModal("doctorModal");
+
+}
+
+
+/* -------------------------------
+   MY OPD
+-------------------------------- */
+
+function openMyOPD(){
+
+  const area =
+    docume
