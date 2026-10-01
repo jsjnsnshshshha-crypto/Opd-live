@@ -421,53 +421,60 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
 
-      /*
-        Temporary frontend test account.
+  const { data, error } =
+    await window.supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
 
-        Production mein password yahan store nahi hoga.
-      */
-
-      const user = {
-        id: email,
-        name: email.includes("@")
-          ? email.split("@")[0]
-          : "Patient",
-        email: email,
-        patientId: email
-      };
-
-      saveSession(user);
-
-      closeLoginModal();
-
-      updateAuthUI();
-
-      updateMyOpd();
-
-      showToast(
-        "Login successful.",
-        "success"
-      );
-
-      if (passwordInput) {
-        passwordInput.value = "";
-      }
-
-    } catch (error) {
-
-      console.error(
-        "Login error:",
-        error
-      );
-
-      setText(
-        errorElement,
-        "Unable to login. Please try again."
-      );
-
-      showElement(errorElement);
-    }
+  if (error) {
+    throw error;
   }
+
+  const authUser = data.user;
+
+  const user = {
+    id: authUser.id,
+    name:
+      authUser.user_metadata?.full_name ||
+      authUser.email?.split("@")[0] ||
+      "Patient",
+    email: authUser.email || email,
+    patientId: authUser.id
+  };
+
+  saveSession(user);
+
+  closeLoginModal();
+
+  updateAuthUI();
+
+  updateMyOpd();
+
+  showToast(
+    "Login successful.",
+    "success"
+  );
+
+  if (passwordInput) {
+    passwordInput.value = "";
+  }
+
+} catch (error) {
+
+  console.error(
+    "Login error:",
+    error
+  );
+
+  setText(
+    errorElement,
+    error.message ||
+      "Unable to login. Please check your email and password."
+  );
+
+  showElement(errorElement);
+    }
 
 
   /* =======================================================
