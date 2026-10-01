@@ -1,952 +1,918 @@
-/*
-====================================================
-OPD LIVE
-Application Core
-====================================================
-
-This file is the foundation for:
-- Patient App
-- Doctor App
-- Receptionist App
-- Admin Panel
-- Shared application state
-- Authentication foundation
-- OPD queue foundation
-- Notifications foundation
-- Future production API connection
-*/
+/* =========================================================
+   OPD LIVE — Main Application Logic
+   Patient App — Frontend Logic
+   ========================================================= */
 
 "use strict";
 
-
-/* ==================================================
-   APPLICATION CONFIGURATION
-================================================== */
-
-const OPD_CONFIG = {
-
-    appName: "OPD LIVE",
-
-    version: "1.0.0",
-
-    environment: "development",
-
-    maxActiveOPD: 4,
-
-    defaultStartingOPD: 1,
-
-    queueWarningNumbers: 5,
-
-    storageKeys: {
-
-        data: "opdLiveData",
-
-        user: "opdLiveUser",
-
-        session: "opdLiveSession"
-
-    }
-
-};
-
-
-/* ==================================================
-   STORAGE SERVICE
-================================================== */
-
-const OPDStorage = {
-
-    get(key, fallback = null) {
-
-        try {
-
-            const value =
-                localStorage.getItem(key);
-
-            if (value === null) {
-                return fallback;
-            }
-
-            return JSON.parse(value);
-
-        } catch (error) {
-
-            console.error(
-                "OPD LIVE Storage Read Error:",
-                error
-            );
-
-            return fallback;
-        }
-
-    },
-
-
-    set(key, value) {
-
-        try {
-
-            localStorage.setItem(
-                key,
-                JSON.stringify(value)
-            );
-
-            return true;
-
-        } catch (error) {
-
-            console.error(
-                "OPD LIVE Storage Write Error:",
-                error
-            );
-
-            return false;
-        }
-
-    },
-
-
-    remove(key) {
-
-        try {
-
-            localStorage.removeItem(key);
-
-            return true;
-
-        } catch (error) {
-
-            console.error(
-                "OPD LIVE Storage Remove Error:",
-                error
-            );
-
-            return false;
-        }
-
-    }
-
-};
-
-
-/* ==================================================
-   ID GENERATOR
-================================================== */
-
-const OPDId = {
-
-    create(prefix = "ID") {
-
-        return (
-            prefix +
-            "_" +
-            Date.now() +
-            "_" +
-            Math.random()
-                .toString(36)
-                .substring(2, 8)
-                .toUpperCase()
-        );
-
-    }
-
-};
-
-
-/* ==================================================
-   VALIDATION
-================================================== */
-
-const OPDValidation = {
-
-    required(value) {
-
-        return (
-            value !== undefined &&
-            value !== null &&
-            String(value).trim() !== ""
-        );
-
-    },
-
-
-    mobile(value) {
-
-        return /^[0-9]{10}$/.test(
-            String(value).replace(/\s/g, "")
-        );
-
-    },
-
-
-    email(value) {
-
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-            .test(String(value));
-
-    },
-
-
-    password(value) {
-
-        return (
-            typeof value === "string" &&
-            value.length >= 6
-        );
-
-    },
-
-
-    age(value) {
-
-        const age = Number(value);
-
-        return (
-            Number.isInteger(age) &&
-            age >= 0 &&
-            age <= 120
-        );
-
-    }
-
-};
-
-
-/* ==================================================
-   OPD QUEUE SERVICE
-================================================== */
-
-const OPDQueue = {
-
-    getPatientsAhead(
-        patientNumber,
-        currentNumber
-    ) {
-
-        return Math.max(
-            0,
-            Number(patientNumber) -
-            Number(currentNumber)
-        );
-
-    },
-
-
-    canMoveBack(
-        currentNumber,
-        startingNumber =
-            OPD_CONFIG.defaultStartingOPD
-    ) {
-
-        return (
-            Number(currentNumber) >
-            Number(startingNumber)
-        );
-
-    },
-
-
-    nextNumber(currentNumber) {
-
-        return Number(currentNumber) + 1;
-
-    },
-
-
-    previousNumber(currentNumber) {
-
-        return Math.max(
-            OPD_CONFIG.defaultStartingOPD,
-            Number(currentNumber) - 1
-        );
-
-    },
-
-
-    approximateWaitingTime(
-        patientsAhead,
-        averageMinutesPerPatient = null
-    ) {
-
-        if (
-            averageMinutesPerPatient === null ||
-            !Number.isFinite(
-                Number(averageMinutesPerPatient)
-            )
-        ) {
-
-            return null;
-
-        }
-
-        const minutes =
-            Number(patientsAhead) *
-            Number(averageMinutesPerPatient);
-
-        if (minutes <= 0) {
-            return "Your number is approaching.";
-        }
-
-        const low =
-            Math.max(5, Math.round(minutes * 0.8));
-
-        const high =
-            Math.max(
-                low + 5,
-                Math.round(minutes * 1.2)
-            );
-
-        return `${low}-${high} minutes approximately`;
-
-    }
-
-};
-
-
-/* ==================================================
-   USER / ROLE SERVICE
-================================================== */
-
-const OPDRoles = {
-
-    PATIENT: "patient",
-
-    DOCTOR: "doctor",
-
-    RECEPTIONIST: "receptionist",
-
-    HOSPITAL: "hospital",
-
-    ADMIN: "admin",
-
-    FOUNDER: "founder"
-
-};
-
-
-const OPDAuth = {
-
-    getCurrentUser() {
-
-        return OPDStorage.get(
-            OPD_CONFIG.storageKeys.user,
-            null
-        );
-
-    },
-
-
-    isLoggedIn() {
-
-        return !!this.getCurrentUser();
-
-    },
-
-
-    role() {
-
-        const user =
-            this.getCurrentUser();
-
-        return user ? user.role : null;
-
-    },
-
-
-    isPatient() {
-
-        return (
-            this.role() ===
-            OPDRoles.PATIENT
-        );
-
-    },
-
-
-    isDoctor() {
-
-        return (
-            this.role() ===
-            OPDRoles.DOCTOR
-        );
-
-    },
-
-
-    isReceptionist() {
-
-        return (
-            this.role() ===
-            OPDRoles.RECEPTIONIST
-        );
-
-    },
-
-
-    isAdmin() {
-
-        return (
-            this.role() === OPDRoles.ADMIN ||
-            this.role() === OPDRoles.FOUNDER
-        );
-
-    },
-
-
-    logout() {
-
-        OPDStorage.remove(
-            OPD_CONFIG.storageKeys.user
-        );
-
-        OPDStorage.remove(
-            OPD_CONFIG.storageKeys.session
-        );
-
-        window.dispatchEvent(
-            new CustomEvent(
-                "opd:logout"
-            )
-        );
-
-    }
-
-};
-
-
-/* ==================================================
-   PATIENT OPD LIMIT
-================================================== */
-
-const OPDPatient = {
-
-    getActiveOPDs(user) {
-
-        if (
-            !user ||
-            !Array.isArray(user.activeOPDs)
-        ) {
-
-            return [];
-
-        }
-
-        return user.activeOPDs.filter(
-            opd =>
-                opd &&
-                opd.status === "active"
-        );
-
-    },
-
-
-    canJoinAnotherOPD(
-        user,
-        limit = OPD_CONFIG.maxActiveOPD
-    ) {
-
-        const active =
-            this.getActiveOPDs(user);
-
-        return active.length < limit;
-
-    },
-
-
-    hasDoctorOPD(
-        user,
-        doctorId
-    ) {
-
-        const active =
-            this.getActiveOPDs(user);
-
-        return active.some(
-            opd =>
-                opd.doctorId === doctorId
-        );
-
-    }
-
-};
-
-
-/* ==================================================
-   NOTIFICATION SERVICE
-================================================== */
-
-const OPDNotifications = {
-
-    create({
-
-        userId,
-
-        type = "system",
-
-        title = "OPD LIVE",
-
-        message
-
-    }) {
-
-        return {
-
-            id:
-                OPDId.create("NOTIFY"),
-
-            userId,
-
-            type,
-
-            title,
-
-            message,
-
-            read: false,
-
-            createdAt:
-                new Date().toISOString()
-
-        };
-
-    },
-
-
-    queueMessage(
-        patientNumber,
-        currentNumber
-    ) {
-
-        const ahead =
-            OPDQueue.getPatientsAhead(
-                patientNumber,
-                currentNumber
-            );
-
-        return {
-
-            ahead,
-
-            message:
-                `Your OPD number is ${patientNumber}. ` +
-                `Current OPD number is ${currentNumber}. ` +
-                `There are approximately ${ahead} patients ahead of you.`
-
-        };
-
-    },
-
-
-    approachingMessage(
-        patientNumber,
-        currentNumber
-    ) {
-
-        return {
-
-            message:
-                `Your OPD number ${patientNumber} ` +
-                `is approaching. ` +
-                `Current OPD number is ${currentNumber}. ` +
-                `Please reach the hospital/clinic in time.`
-
-        };
-
-    }
-
-};
-
-
-/* ==================================================
-   REALTIME EVENT BUS
-==================================================
-
-This provides the frontend event layer.
-
-Later it will be connected to the real
-production realtime backend.
-*/
-
-const OPDRealtime = {
-
-    events: {},
-
-
-    on(eventName, callback) {
-
-        if (!this.events[eventName]) {
-
-            this.events[eventName] = [];
-
-        }
-
-        this.events[eventName].push(callback);
-
-    },
-
-
-    emit(eventName, data) {
-
-        const listeners =
-            this.events[eventName] || [];
-
-        listeners.forEach(
-            callback => {
-
-                try {
-
-                    callback(data);
-
-                } catch (error) {
-
-                    console.error(
-                        "OPD LIVE Event Error:",
-                        error
-                    );
-
-                }
-
-            }
-        );
-
-    },
-
-
-    off(eventName, callback) {
-
-        if (!this.events[eventName]) {
-            return;
-        }
-
-        this.events[eventName] =
-            this.events[eventName]
-                .filter(
-                    item =>
-                        item !== callback
-                );
-
-    }
-
-};
-
-
-/* ==================================================
-   SHARED APPLICATION STATE
-================================================== */
-
-const OPDState = {
-
+/* =========================================================
+   APPLICATION STATE
+   ========================================================= */
+
+const OPDLive = {
     currentUser: null,
+    loggedIn: false,
+    authMode: "login",
 
-    currentRole: null,
+    doctors: [
+        {
+            id: 1,
+            name: "Dr. Sharma",
+            speciality: "General Physician",
+            hospital: "OPB Hospital",
+            available: true,
+            currentOPD: 24,
+            waiting: 5
+        },
+        {
+            id: 2,
+            name: "Dr. Priya",
+            speciality: "Gynecologist",
+            hospital: "City Care Hospital",
+            available: true,
+            currentOPD: 12,
+            waiting: 3
+        },
+        {
+            id: 3,
+            name: "Dr. Verma",
+            speciality: "Cardiologist",
+            hospital: "OPB Hospital",
+            available: false,
+            currentOPD: 18,
+            waiting: 0
+        }
+    ],
 
-    selectedDoctor: null,
-
-    selectedHospital: null,
-
-    loading: false,
-
-    initialized: false,
-
-
-    initialize() {
-
-        this.currentUser =
-            OPDAuth.getCurrentUser();
-
-        this.currentRole =
-            this.currentUser
-                ? this.currentUser.role
-                : null;
-
-        this.initialized = true;
-
-        OPDRealtime.emit(
-            "state:initialized",
-            this
-        );
-
-    },
-
-
-    refreshUser() {
-
-        this.currentUser =
-            OPDAuth.getCurrentUser();
-
-        this.currentRole =
-            this.currentUser
-                ? this.currentUser.role
-                : null;
-
+    patientOPD: {
+        number: "A-24",
+        ahead: 5,
+        doctor: "Dr. Sharma",
+        hospital: "OPB Hospital"
     }
-
 };
 
 
-/* ==================================================
-   API SERVICE PLACEHOLDER
-==================================================
+/* =========================================================
+   DOM HELPERS
+   ========================================================= */
 
-IMPORTANT:
+function $(selector) {
+    return document.querySelector(selector);
+}
 
-The application will NOT use this as the final
-production backend.
+function $$(selector) {
+    return Array.from(document.querySelectorAll(selector));
+}
 
-This is intentionally separated so later we can
-connect:
 
-Frontend
-   ↓
-Secure API
-   ↓
-Production Backend
-   ↓
-Production Database
-   ↓
-Realtime service
+/* =========================================================
+   STORAGE
+   ========================================================= */
 
-without rewriting the whole application.
-*/
+function loadUser() {
+    try {
+        const savedUser = localStorage.getItem("opd_live_user");
 
-const OPDApi = {
-
-    baseURL: "",
-
-    async request(
-        endpoint,
-        options = {}
-    ) {
-
-        if (!this.baseURL) {
-
-            throw new Error(
-                "Production API is not connected yet."
-            );
-
+        if (savedUser) {
+            OPDLive.currentUser = JSON.parse(savedUser);
+            OPDLive.loggedIn = true;
         }
+    } catch (error) {
+        console.error("Unable to load user:", error);
+    }
+}
 
-        const response =
-            await fetch(
-                this.baseURL + endpoint,
-                {
+function saveUser(user) {
+    OPDLive.currentUser = user;
+    OPDLive.loggedIn = true;
 
-                    method:
-                        options.method || "GET",
+    localStorage.setItem(
+        "opd_live_user",
+        JSON.stringify(user)
+    );
+}
 
-                    headers: {
+function logoutUser() {
+    OPDLive.currentUser = null;
+    OPDLive.loggedIn = false;
 
-                        "Content-Type":
-                            "application/json",
+    localStorage.removeItem("opd_live_user");
 
-                        ...(options.headers || {})
+    showToast("Logged out successfully");
 
-                    },
+    updateLoginUI();
+}
 
-                    body:
-                        options.body
-                            ? JSON.stringify(
-                                options.body
-                              )
-                            : undefined
 
+/* =========================================================
+   TOAST
+   ========================================================= */
+
+function showToast(message) {
+    let container = $(".toast-container");
+
+    if (!container) {
+        container = document.createElement("div");
+        container.className = "toast-container";
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = message;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = "0";
+
+        setTimeout(() => {
+            toast.remove();
+        }, 250);
+    }, 2500);
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+function openModal(content) {
+    let overlay = $(".modal-overlay");
+
+    if (!overlay) {
+        overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+
+        document.body.appendChild(overlay);
+    }
+
+    overlay.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <h3>${content.title || "OPD LIVE"}</h3>
+
+                <button
+                    class="close-button"
+                    type="button"
+                    aria-label="Close"
+                    data-close-modal
+                >
+                    ×
+                </button>
+            </div>
+
+            ${content.body || ""}
+        </div>
+    `;
+
+    overlay.classList.add("show");
+
+    overlay.addEventListener("click", function handler(event) {
+        if (
+            event.target === overlay ||
+            event.target.closest("[data-close-modal]")
+        ) {
+            closeModal();
+            overlay.removeEventListener("click", handler);
+        }
+    });
+}
+
+function closeModal() {
+    const overlay = $(".modal-overlay");
+
+    if (overlay) {
+        overlay.classList.remove("show");
+    }
+}
+
+
+/* =========================================================
+   LOGIN MODAL
+   ========================================================= */
+
+function openLogin() {
+    OPDLive.authMode = "login";
+
+    openAuthModal();
+}
+
+function openRegister() {
+    OPDLive.authMode = "register";
+
+    openAuthModal();
+}
+
+function openAuthModal() {
+    const isLogin = OPDLive.authMode === "login";
+
+    openModal({
+        title: isLogin ? "Login to OPD LIVE" : "Create Account",
+
+        body: `
+            <div class="auth-tabs">
+                <button
+                    type="button"
+                    class="auth-tab ${isLogin ? "active" : ""}"
+                    data-auth-tab="login"
+                >
+                    Login
+                </button>
+
+                <button
+                    type="button"
+                    class="auth-tab ${!isLogin ? "active" : ""}"
+                    data-auth-tab="register"
+                >
+                    Register
+                </button>
+            </div>
+
+            <form id="authForm">
+
+                ${
+                    !isLogin
+                        ? `
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input
+                            id="authName"
+                            type="text"
+                            placeholder="Enter your name"
+                            required
+                        >
+                    </div>
+                    `
+                        : ""
                 }
-            );
 
-        if (!response.ok) {
+                <div class="form-group">
+                    <label>Mobile / Email</label>
+                    <input
+                        id="authContact"
+                        type="text"
+                        placeholder="Enter mobile number or email"
+                        required
+                    >
+                </div>
 
-            throw new Error(
-                `API Error: ${response.status}`
-            );
+                <div class="form-group">
+                    <label>Password</label>
+                    <input
+                        id="authPassword"
+                        type="password"
+                        placeholder="Enter password"
+                        required
+                    >
+                </div>
 
-        }
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    ${isLogin ? "Login" : "Create Account"}
+                </button>
 
-        return response.json();
+            </form>
+        `
+    });
+}
 
+
+/* =========================================================
+   AUTH SUBMIT
+   ========================================================= */
+
+function handleAuthSubmit(event) {
+    event.preventDefault();
+
+    const contact = $("#authContact");
+    const password = $("#authPassword");
+
+    if (!contact || !password) {
+        return;
     }
 
-};
-
-
-/* ==================================================
-   SECURITY HELPERS
-================================================== */
-
-const OPDSecurity = {
-
-    escapeHTML(value) {
-
-        if (value === null ||
-            value === undefined) {
-
-            return "";
-
-        }
-
-        return String(value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-
-    },
-
-
-    sanitizeText(value) {
-
-        return String(value || "")
-            .trim()
-            .replace(
-                /[<>]/g,
-                ""
-            );
-
+    if (!contact.value.trim() || !password.value.trim()) {
+        showToast("Please fill all required fields");
+        return;
     }
 
-};
+    let name = "OPD LIVE Patient";
+
+    const nameInput = $("#authName");
+
+    if (nameInput && nameInput.value.trim()) {
+        name = nameInput.value.trim();
+    }
+
+    const user = {
+        id: Date.now(),
+        name: name,
+        contact: contact.value.trim()
+    };
+
+    saveUser(user);
+
+    closeModal();
+
+    updateLoginUI();
+
+    showToast(
+        OPDLive.authMode === "login"
+            ? "Login successful"
+            : "Account created successfully"
+    );
+}
 
 
-/* ==================================================
-   APP HELPERS
-================================================== */
+/* =========================================================
+   LOGIN REQUIRED
+   ========================================================= */
 
-const OPDApp = {
+function requireLogin() {
+    if (OPDLive.loggedIn) {
+        return true;
+    }
 
-    version() {
+    openLogin();
 
-        return OPD_CONFIG.version;
+    showToast("Please login to use My OPD");
 
-    },
+    return false;
+}
 
 
-    isDevelopment() {
+/* =========================================================
+   LOGIN UI
+   ========================================================= */
 
-        return (
-            OPD_CONFIG.environment ===
-            "development"
+function updateLoginUI() {
+    const loginButtons = $$(
+        "[data-login], .login-button, #loginButton"
+    );
+
+    loginButtons.forEach(button => {
+        if (OPDLive.loggedIn) {
+            button.textContent = "Profile";
+        } else {
+            button.textContent = "Login";
+        }
+    });
+
+    const userElements = $$("[data-user-name]");
+
+    userElements.forEach(element => {
+        element.textContent =
+            OPDLive.currentUser?.name || "Patient";
+    });
+}
+
+
+/* =========================================================
+   DOCTOR SEARCH
+   ========================================================= */
+
+function searchDoctors(value) {
+    const query = value.toLowerCase().trim();
+
+    const cards = $$(".doctor-card");
+
+    cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+
+        card.style.display =
+            !query || text.includes(query)
+                ? ""
+                : "none";
+    });
+}
+
+
+/* =========================================================
+   DOCTOR DETAILS
+   ========================================================= */
+
+function showDoctorDetails(doctorId) {
+    const doctor = OPDLive.doctors.find(
+        item => item.id === Number(doctorId)
+    );
+
+    if (!doctor) {
+        return;
+    }
+
+    openModal({
+        title: doctor.name,
+
+        body: `
+            <div class="info-card">
+
+                <div class="info-row">
+                    <span>Specialisation</span>
+                    <span>${doctor.speciality}</span>
+                </div>
+
+                <div class="info-row">
+                    <span>Hospital</span>
+                    <span>${doctor.hospital}</span>
+                </div>
+
+                <div class="info-row">
+                    <span>Status</span>
+                    <span>
+                        ${
+                            doctor.available
+                                ? "Available"
+                                : "Not Available"
+                        }
+                    </span>
+                </div>
+
+                <div class="info-row">
+                    <span>Current OPD</span>
+                    <span>${doctor.currentOPD}</span>
+                </div>
+
+                ${
+                    doctor.available
+                        ? `
+                    <button
+                        class="btn btn-primary mt-15"
+                        data-book-doctor="${doctor.id}"
+                    >
+                        Join OPD
+                    </button>
+                    `
+                        : `
+                    <button
+                        class="btn btn-secondary mt-15"
+                        disabled
+                    >
+                        Currently Unavailable
+                    </button>
+                    `
+                }
+
+            </div>
+        `
+    });
+}
+
+
+/* =========================================================
+   JOIN OPD
+   ========================================================= */
+
+function joinOPD(doctorId) {
+    if (!requireLogin()) {
+        return;
+    }
+
+    const doctor = OPDLive.doctors.find(
+        item => item.id === Number(doctorId)
+    );
+
+    if (!doctor) {
+        return;
+    }
+
+    if (!doctor.available) {
+        showToast("This doctor is currently unavailable");
+        return;
+    }
+
+    OPDLive.patientOPD = {
+        number: "A-" + (doctor.currentOPD + 1),
+        ahead: doctor.waiting,
+        doctor: doctor.name,
+        hospital: doctor.hospital
+    };
+
+    showToast(
+        `OPD token ${OPDLive.patientOPD.number} generated`
+    );
+
+    updateMyOPD();
+}
+
+
+/* =========================================================
+   MY OPD
+   ========================================================= */
+
+function updateMyOPD() {
+    const numberElements = $$(
+        "[data-my-opd-number], .my-opd-number"
+    );
+
+    numberElements.forEach(element => {
+        element.textContent =
+            OPDLive.patientOPD.number;
+    });
+
+    const aheadElements = $$(
+        "[data-my-opd-ahead], .ahead-text"
+    );
+
+    aheadElements.forEach(element => {
+        element.textContent =
+            `${OPDLive.patientOPD.ahead} patients ahead`;
+    });
+
+    const doctorElements = $$(
+        "[data-my-opd-doctor]"
+    );
+
+    doctorElements.forEach(element => {
+        element.textContent =
+            `${OPDLive.patientOPD.doctor} • ${OPDLive.patientOPD.hospital}`;
+    });
+}
+
+
+/* =========================================================
+   MY OPD ACTION
+   ========================================================= */
+
+function openMyOPD() {
+    if (!requireLogin()) {
+        return;
+    }
+
+    openModal({
+        title: "My OPD",
+
+        body: `
+            <div class="my-opd-card">
+
+                <div class="small">
+                    Your OPD Number
+                </div>
+
+                <div class="my-opd-number">
+                    ${OPDLive.patientOPD.number}
+                </div>
+
+                <div class="ahead-text">
+                    ${OPDLive.patientOPD.ahead}
+                    patients ahead
+                </div>
+
+                <div class="mt-15">
+                    ${OPDLive.patientOPD.doctor}
+                    <br>
+                    ${OPDLive.patientOPD.hospital}
+                </div>
+
+            </div>
+
+            <button
+                class="btn btn-primary mt-15"
+                data-refresh-opd
+            >
+                Refresh OPD Status
+            </button>
+        `
+    });
+}
+
+
+/* =========================================================
+   EXPLORE ACTIONS
+   ========================================================= */
+
+function handleExploreAction(action) {
+
+    switch (action) {
+
+        case "hospital":
+            showToast("Hospital search opened");
+            break;
+
+        case "specialisation":
+        case "speciality":
+            showToast("Specialisation search opened");
+            break;
+
+        case "doctor":
+            showToast("Doctor search opened");
+            break;
+
+        case "emergency":
+            openEmergency();
+            break;
+
+        case "my-opd":
+            openMyOPD();
+            break;
+
+        default:
+            break;
+    }
+}
+
+
+/* =========================================================
+   EMERGENCY
+   ========================================================= */
+
+function openEmergency() {
+    openModal({
+        title: "Emergency",
+
+        body: `
+            <div class="emergency-card">
+
+                <div class="emergency-title">
+                    🚨 Emergency Assistance
+                </div>
+
+                <p class="emergency-text">
+                    If this is a medical emergency,
+                    contact your nearest emergency
+                    service or hospital immediately.
+                </p>
+
+                <button
+                    class="btn btn-danger mt-15"
+                    data-emergency-call
+                >
+                    Call Emergency
+                </button>
+
+            </div>
+        `
+    });
+}
+
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
+function handleNavigation(target) {
+
+    if (!target) {
+        return;
+    }
+
+    const element = document.getElementById(target);
+
+    if (element) {
+        element.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
+}
+
+
+/* =========================================================
+   EVENT DELEGATION
+   ========================================================= */
+
+document.addEventListener("click", function(event) {
+
+    const authTab =
+        event.target.closest("[data-auth-tab]");
+
+    if (authTab) {
+
+        OPDLive.authMode =
+            authTab.dataset.authTab;
+
+        openAuthModal();
+
+        return;
+    }
+
+
+    const loginButton =
+        event.target.closest(
+            "[data-login], .login-button, #loginButton"
         );
 
-    },
+    if (loginButton) {
 
+        if (OPDLive.loggedIn) {
 
-    log(message, data = null) {
+            openModal({
+                title: "My Profile",
 
-        if (
-            OPD_CONFIG.environment ===
-            "development"
-        ) {
+                body: `
+                    <div class="info-card">
 
-            if (data !== null) {
+                        <div class="info-row">
+                            <span>Name</span>
+                            <span>
+                                ${
+                                    OPDLive.currentUser?.name ||
+                                    "Patient"
+                                }
+                            </span>
+                        </div>
 
-                console.log(
-                    "[OPD LIVE]",
-                    message,
-                    data
-                );
+                        <div class="info-row">
+                            <span>Contact</span>
+                            <span>
+                                ${
+                                    OPDLive.currentUser?.contact ||
+                                    "-"
+                                }
+                            </span>
+                        </div>
 
-            } else {
+                    </div>
 
-                console.log(
-                    "[OPD LIVE]",
-                    message
-                );
+                    <button
+                        class="btn btn-danger mt-15"
+                        data-logout
+                    >
+                        Logout
+                    </button>
+                `
+            });
 
-            }
-
+        } else {
+            openLogin();
         }
 
+        return;
     }
 
-};
+
+    const logout =
+        event.target.closest("[data-logout]");
+
+    if (logout) {
+        logoutUser();
+        closeModal();
+        return;
+    }
 
 
-/* ==================================================
-   APPLICATION START
-================================================== */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        OPDState.initialize();
-
-        OPDApp.log(
-            "Application core loaded."
+    const myOPD =
+        event.target.closest(
+            "[data-my-opd], .my-opd"
         );
 
-        OPDApp.log(
-            "Version:",
-            OPD_CONFIG.version
+    if (myOPD) {
+        openMyOPD();
+        return;
+    }
+
+
+    const explore =
+        event.target.closest("[data-explore]");
+
+    if (explore) {
+        handleExploreAction(
+            explore.dataset.explore
         );
-
+        return;
     }
-);
 
 
-/* ==================================================
-   CROSS-TAB DATA REFRESH
-================================================== */
+    const doctor =
+        event.target.closest("[data-doctor-id]");
 
-window.addEventListener(
-    "storage",
-    event => {
-
-        if (
-            event.key ===
-            OPD_CONFIG.storageKeys.user
-        ) {
-
-            OPDState.refreshUser();
-
-            OPDRealtime.emit(
-                "user:changed",
-                OPDState.currentUser
-            );
-
-        }
-
+    if (doctor) {
+        showDoctorDetails(
+            doctor.dataset.doctorId
+        );
+        return;
     }
-);
 
 
-/* ==================================================
-   GLOBAL ACCESS
-================================================== */
+    const join =
+        event.target.closest("[data-book-doctor]");
 
-window.OPDLive = {
-
-    config: OPD_CONFIG,
-
-    storage: OPDStorage,
-
-    id: OPDId,
-
-    validation: OPDValidation,
-
-    queue: OPDQueue,
-
-    roles: OPDRoles,
-
-    auth: OPDAuth,
-
-    patient: OPDPatient,
-
-    notifications: OPDNotifications,
-
-    realtime: OPDRealtime,
-
-    state: OPDState,
-
-    api: OPDApi,
-
-    security: OPDSecurity,
-
-    app: OPDApp
-
-};
+    if (join) {
+        joinOPD(
+            join.dataset.bookDoctor
+        );
+        return;
+    }
 
 
-console.log(
-    "OPD LIVE application core ready."
-);
+    const emergency =
+        event.target.closest("[data-emergency]");
+
+    if (emergency) {
+        openEmergency();
+        return;
+    }
+
+
+    const emergencyCall =
+        event.target.closest("[data-emergency-call]");
+
+    if (emergencyCall) {
+        showToast(
+            "Please use your phone's emergency service"
+        );
+        return;
+    }
+
+
+    const refresh =
+        event.target.closest("[data-refresh-opd]");
+
+    if (refresh) {
+        showToast("OPD status refreshed");
+        closeModal();
+        return;
+    }
+
+
+    const navigation =
+        event.target.closest("[data-nav]");
+
+    if (navigation) {
+        handleNavigation(
+            navigation.dataset.nav
+        );
+    }
+
+});
+
+
+/* =========================================================
+   SEARCH EVENT
+   ========================================================= */
+
+document.addEventListener("input", function(event) {
+
+    if (
+        event.target.matches(
+            ".search-box input, #searchInput, [data-search]"
+        )
+    ) {
+        searchDoctors(event.target.value);
+    }
+
+});
+
+
+/* =========================================================
+   FORM EVENTS
+   ========================================================= */
+
+document.addEventListener("submit", function(event) {
+
+    if (event.target.id === "authForm") {
+        handleAuthSubmit(event);
+    }
+
+});
+
+
+/* =========================================================
+   KEYBOARD SUPPORT
+   ========================================================= */
+
+document.addEventListener("keydown", function(event) {
+
+    if (event.key === "Escape") {
+        closeModal();
+    }
+
+});
+
+
+/* =========================================================
+   INITIALIZATION
+   ========================================================= */
+
+function initializeApp() {
+
+    loadUser();
+
+    updateLoginUI();
+
+    updateMyOPD();
+
+    console.log(
+        "OPD LIVE application initialized successfully."
+    );
+}
+
+
+if (
+    document.readyState === "loading"
+) {
+    document.addEventListener(
+        "DOMContentLoaded",
+        initializeApp
+    );
+} else {
+    initializeApp();
+}
+
+
+/* =========================================================
+   OPD LIVE — END
+   ========================================================= */
