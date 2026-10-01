@@ -376,7 +376,37 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
   }
+  /* =======================================================
+     PROFILE / LOGIN BUTTON
+     ======================================================= */
 
+  const profileButton = $("profileButton");
+
+  if (profileButton) {
+
+    profileButton.addEventListener("click", () => {
+
+      if (state.isLoggedIn) {
+
+        openAppModal(
+          "Patient Profile",
+          `
+            <div class="profile-content">
+              <h3>${state.currentUser?.name || "Patient"}</h3>
+              <p>${state.currentUser?.email || ""}</p>
+            </div>
+          `
+        );
+
+      } else {
+
+        openLoginModal();
+
+      }
+
+    });
+
+  }
 
   /* =======================================================
      LOGIN
