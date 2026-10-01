@@ -19,13 +19,16 @@ content="OPD LIVE - Live OPD queue and hospital information."
 «»
 
   <title>OPD LIVE</title>  <!-- MAIN STYLES -->  <link rel="stylesheet" href="style.css">
-</head><body>  <div id="app"><!-- =========================
+</head><body>  <div id="app"><!-- =====================================================
      PATIENT APP
-     ========================= -->
+     ===================================================== -->
 
 <div class="app-container">
 
-  <!-- HEADER -->
+  <!-- =========================
+       HEADER
+       ========================= -->
+
   <header class="app-header">
 
     <div class="header-row">
@@ -70,10 +73,16 @@ content="OPD LIVE - Live OPD queue and hospital information."
   </header>
 
 
-  <!-- MAIN CONTENT -->
+  <!-- =========================
+       MAIN CONTENT
+       ========================= -->
+
   <main id="mainContent">
 
-    <!-- WELCOME -->
+    <!-- =========================
+         WELCOME
+         ========================= -->
+
     <section class="page-section welcome">
 
       <h2>
@@ -85,6 +94,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
       </p>
 
       <!-- SEARCH -->
+
       <div class="search-box">
 
         <span class="search-icon">
@@ -121,6 +131,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
       <div class="explore-grid">
 
         <!-- HOSPITAL -->
+
         <button
           class="explore-item"
           id="hospitalOption"
@@ -139,6 +150,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
 
 
         <!-- SPECIALISATION -->
+
         <button
           class="explore-item"
           id="specialisationOption"
@@ -157,6 +169,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
 
 
         <!-- DOCTOR -->
+
         <button
           class="explore-item"
           id="doctorOption"
@@ -175,6 +188,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
 
 
         <!-- EMERGENCY -->
+
         <button
           class="explore-item"
           id="emergencyOption"
@@ -193,6 +207,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
 
 
         <!-- MY OPD -->
+
         <button
           class="explore-item my-opd"
           id="myOpdOption"
@@ -243,7 +258,8 @@ content="OPD LIVE - Live OPD queue and hospital information."
       </div>
 
 
-      <!-- DOCTORS WILL BE RENDERED HERE -->
+      <!-- DOCTORS WILL BE RENDERED BY app.js -->
+
       <div
         class="doctor-list"
         id="doctorList"
@@ -283,6 +299,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
 
 
       <!-- LOGGED-IN OPD CARD -->
+
       <div
         class="my-opd-card"
         id="myOpdCard"
@@ -317,6 +334,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
 
 
       <!-- LOGIN REQUIRED -->
+
       <div
         class="login-required hidden"
         id="loginRequired"
@@ -365,9 +383,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
       </div>
 
 
-      <div
-        id="hospitalList"
-      >
+      <div id="hospitalList">
 
         <div class="hospital-card">
 
@@ -430,6 +446,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
 
         </div>
 
+
         <div class="info-row">
 
           <span>
@@ -441,6 +458,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
           </span>
 
         </div>
+
 
         <div class="info-row">
 
@@ -583,9 +601,9 @@ content="OPD LIVE - Live OPD queue and hospital information."
 </div>
 
 
-<!-- =========================
+<!-- =====================================================
      LOGIN MODAL
-     ========================= -->
+     ===================================================== -->
 
 <div
   class="modal-overlay hidden"
@@ -771,9 +789,9 @@ content="OPD LIVE - Live OPD queue and hospital information."
 </div>
 
 
-<!-- =========================
+<!-- =====================================================
      GENERIC MODAL
-     ========================= -->
+     ===================================================== -->
 
 <div
   class="modal-overlay hidden"
@@ -792,6 +810,7 @@ content="OPD LIVE - Live OPD queue and hospital information."
         class="close-button"
         id="closeAppModal"
         type="button"
+        aria-label="Close"
       >
         ×
       </button>
@@ -805,14 +824,16 @@ content="OPD LIVE - Live OPD queue and hospital information."
 </div>
 
 
-<!-- =========================
+<!-- =====================================================
      TOAST
-     ========================= -->
+     ===================================================== -->
 
 <div
   class="toast-container"
   id="toastContainer"
 ></div>
 
-  </div>  <!-- MAIN APPLICATION LOGIC -->  <script src="app.js"></script></body>
+  </div>  <!-- =====================================================
+       MAIN APPLICATION LOGIC
+       ===================================================== -->  <script src="app.js"></script></body>
 </html>
